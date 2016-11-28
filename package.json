@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "run": "node-lambda run"
   },
   "repository": {
     "type": "git",
@@ -15,5 +16,10 @@
   "bugs": {
     "url": "https://github.com/andreychernih/usgbc-46-backend/issues"
   },
-  "homepage": "https://github.com/andreychernih/usgbc-46-backend#readme"
+  "homepage": "https://github.com/andreychernih/usgbc-46-backend#readme",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-awslambda": "^0.4.0",
+    "gulp-zip": "^3.2.0"
+  }
 }
