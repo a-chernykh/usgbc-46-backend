@@ -1,6 +1,8 @@
 var gulp   = require('gulp');
 var lambda = require('gulp-awslambda');
 var zip    = require('gulp-zip');
+var path = require('path');
+var clean = require('gulp-clean');
 
 var lambdaOpts = {
     "publish": true,
@@ -8,9 +10,23 @@ var lambdaOpts = {
     "profile": "aws-hack-16-deploy"
 }
 
-gulp.task('default', function() {
-    return gulp.src('index.js')
+var src = ['index.js', 'node_modules/!(gulp*)/**'];
+
+gulp.task('default', ['deploy']);
+
+gulp.task('package', ['clean'], function() {
+    return gulp.src(src,  {base: "."})
+        .pipe(gulp.dest('build'))
         .pipe(zip('archive.zip'))
-        .pipe(lambda("leaderboard", lambdaOpts))
         .pipe(gulp.dest('dist'));
+});
+
+gulp.task('clean', function() {
+    return gulp.src(['build', 'dist'])
+        .pipe(clean(), {read: false});
+});
+
+gulp.task('deploy', ['package'], function() {
+    return gulp.src('dist/archive.zip')
+        .pipe(lambda("leaderboard", lambdaOpts));
 });

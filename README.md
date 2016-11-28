@@ -14,3 +14,7 @@ Update ```~/.aws/credentials``` to add this profile exactly as is:
 # Build and Deploy
 
     $ gulp
+
+# Test Query
+
+    curl https://h5c128n3tb.execute-api.us-west-2.amazonaws.com/dev/leaderboard

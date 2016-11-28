@@ -1,12 +1,12 @@
 'use strict';
 
-//var mysql = require('mysql');
+var mysql = require('mysql');
 
-console.log('Loading function test final');
+console.log('Loading function');
 
 var conn;
 
-/*var query = function(callback) {
+var query = function(callback) {
     if (!conn) {
         conn = mysql.createConnection({
             host     : 'awsreinventteam46-us-west-2a.c8x1imogzrzr.us-west-2.rds.amazonaws.com',
@@ -32,7 +32,7 @@ var conn;
         console.log('Query Result:', rows);
         callback(rows);
     })
-}*/
+}
 
 var dbname = 'aws2016team46db';
 
@@ -80,29 +80,13 @@ exports.handler = (event, context, callback) => {
         },
     });
     
-    var res = {
-        leaders: [
-            {
-                zipcode: '22222',
-                leedScore: '35'
-                
-            },
-            {
-                zipcode: '11111',
-                leedScore: '23'
-                
-            }
-        ]
-    }
-    
     if (event.test) {
+        console.log("Returning test data.")
         returnTestData(callback);
         return;
     }
     
-    callback(null, res);
-    
-    //query(callback);
+    query(callback);
     
     
     /*switch (event.httpMethod) {
