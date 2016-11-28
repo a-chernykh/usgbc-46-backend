@@ -1,0 +1,19 @@
+{
+  "name": "usgbc-46-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/andreychernih/usgbc-46-backend.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/andreychernih/usgbc-46-backend/issues"
+  },
+  "homepage": "https://github.com/andreychernih/usgbc-46-backend#readme"
+}
