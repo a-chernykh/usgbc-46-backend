@@ -11,9 +11,9 @@ Math.radians = function(degrees) {
 };
 
 exports.getZipcodeFromLocation = function(coord, callback) {
-    console.log('Querying....');
-    var lat = -121.705327; //coord.lat;
-    var long = 37.189396; //coord.long;
+    console.log('Querying....', coord);
+    var lat = coord.lat; 
+    var long =  coord.long;
     const dist = 10;
     // rlon1: 36.91363
     // rlon2: 37.4651
@@ -167,8 +167,8 @@ exports.handler = (event, context, callback) => {
                     return;
                 }
                 
-                var lat = res.Coordinate.x;
-                var long = res.Coordinate.y;
+                var lat = res.Coordinate.y;
+                var long = res.Coordinate.x;
                 exports.getZipcodeFromLocation({lat: lat, long: long}, (err, res) => {
                     if (err) {
                         callback(err);

@@ -6,11 +6,12 @@ var done = (err, res) => {
 
 /*i.connect(() => {
     i.getCoordinatesForZip('27502', (err, res) => {
-        var lat = res.Coordinate.x;
-        var long = res.Coordinate.y;
+        var lat = res.Coordinate.y;
+        var long = res.Coordinate.x;
         i.getZipcodeFromLocation({lat: lat, long: long}, (err, res) => {
             const zips = res.map((z) => z.ZipCode);
-            i.getZips(zips, done);
+            done(err, res);
+            //i.getZips(zips, done);
         })
         
     });
