@@ -79,6 +79,25 @@ exports.connect = function(callback) {
     }
 }
 
+exports.getZips = function(zips, callback) {
+    var z = zips.map((z) => "'" + z + "'").join(' , ');
+    var query = "SELECT * FROM ZipAndScore WHERE Zip IN(" + z + ") ORDER BY Score DESC LIMIT 10";
+    var z = zips.map((z) => "'" + z + "'").join(' , ');
+    console.log('Z:', z);
+    conn.query(query,
+        //[z],
+        function(err, rows, fields) {
+        if (err) {
+            console.log('Query error:', err);
+            callback(err);
+            return;
+        }
+        
+        console.log('QUERY SUCCESS! ROW COUNT:', rows.length);        
+        callback(null, rows);
+    });
+}
+
 var query = function(zipcode, callback) {
     if (!conn) {
         console.log('Creating connection to mysql...');
@@ -150,7 +169,28 @@ exports.handler = (event, context, callback) => {
                 
                 var lat = res.Coordinate.x;
                 var long = res.Coordinate.y;
-                exports.getZipcodeFromLocation({lat: lat, long: long}, callback);
+                exports.getZipcodeFromLocation({lat: lat, long: long}, (err, res) => {
+                    if (err) {
+                        callback(err);
+                        return;
+                    }
+                    
+                    const zips = res.map((z) => z.ZipCode);
+                    exports.getZips(zips, (err, res) => {
+                        if (err) {
+                            callback(err);
+                            return;
+                        }
+                        
+                        var scores = res.map((z) => {
+                            return {
+                                'zip_code': z.Zip,
+                                'score': z.Score};
+                        });
+                        
+                        callback(null, {'scores': scores});
+                    });
+                });
             });
         });
         return;
