@@ -11,3 +11,9 @@ where st_within(Coordinate, envelope(linestring(point(@rlon1, @rlat1), point(@rl
 order by st_distance(point(@lon, @lat), Coordinate) limit 10;
 
 ALTER TABLE ZipCodes ADD SPATIAL INDEX(Coordinate);
+
+
+set @code = '12345';
+
+select Coordinate from ZipCodes
+where Code = @code

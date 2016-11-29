@@ -6,22 +6,34 @@ console.log('Loading function');
 
 var conn;
 
-var query = function(callback) {
-    if (!conn) {
-        conn = mysql.createConnection({
-            host     : 'awsreinventteam46-us-west-2a.c8x1imogzrzr.us-west-2.rds.amazonaws.com',
-            user     : 'aws2016',
-            password : 'aws201646',
-            port     : '3306'
-        });    
-    
-        console.log('Connecting to mysql...');
-        conn.connect();
-        console.log('Connected');
-    }
-    
+Math.radians = function(degrees) {
+  return degrees * Math.PI / 180;
+};
+
+exports.getZipcodeFromLocation = function(coord, callback) {
     console.log('Querying....');
-    conn.query('SELECT * FROM TABLE', function(err, rows, fields) {
+    var lat = -121.705327; //coord.lat;
+    var long = 37.189396; //coord.long;
+    const dist = 10;
+    // rlon1: 36.91363
+    // rlon2: 37.4651
+    const rlon1 = long - dist/Math.abs(Math.cos(Math.radians(lat)) * 69);
+    const rlon2 = long + dist/Math.abs(Math.cos(Math.radians(lat)) * 69);
+    const rlat1 = lat - (dist / 69);
+    const rlat2 = lat + (dist / 69);
+    
+    /*set @lat= -121.705327;
+    set @lon = 37.189396;
+    set @dist = 10;
+    set @rlon1 = @lon-@dist/abs(cos(radians(@lat))*69);
+    set @rlon2 = @lon+@dist/abs(cos(radians(@lat))*69);
+    set @rlat1 = @lat-(@dist/69);
+    set @rlat2 = @lat+(@dist/69);*/
+    
+    var query = 'select ZipCode from ZipCodes where st_within(Coordinate, envelope(linestring(point(?, ?), point(?, ?)))) order by st_distance(point(?, ?), Coordinate) limit 10'
+    conn.query(query, 
+        [rlon1, rlat1, rlon2, rlat2, long, lat],
+         function(err, rows, fields) {
         
         if (err) {
             console.log('Query error:', err);
@@ -29,32 +41,74 @@ var query = function(callback) {
             return;
         }
         
-        console.log('Query Result:', rows);
-        callback(rows);
+        console.log('QUERY SUCCESS! ROW COUNT:', rows.length);        
+        callback(null, rows);
     })
 }
 
-var dbname = 'aws2016team46db';
+exports.getCoordinatesForZip = function (zipcode, callback) {
 
-var getZipcodeFromLocation = function(location) {
+    conn.query('SELECT Coordinate from ZipCodes WHERE ZipCode = ?', [zipcode], function(err, rows, fields) {
+        if (err) {
+            console.log('Query error:', err);
+            callback(err);
+            return;
+        }
+        
+        console.log('QUERY SUCCESS! ROW COUNT:', rows.length);        
+        callback(null, rows[0]);
+    });
+};
+
+exports.connect = function(callback) {
+    if (!conn) {
+        console.log('Creating connection to mysql...');
+        conn = mysql.createConnection({
+            host     : 'awsreinventteam46-cluster-1.cluster-c8x1imogzrzr.us-west-2.rds.amazonaws.com',
+            user     : 'aws2016',
+            password : 'aws201646',
+            port     : '3306',
+            database: 'Aws2016Team46DB'
+        });    
+    
+        console.log('Connecting to mysql...');
+        conn.connect(callback);
+        console.log('Connected');
+    } else {
+        callback();
+    }
+}
+
+var query = function(zipcode, callback) {
+    if (!conn) {
+        console.log('Creating connection to mysql...');
+        conn = mysql.createConnection({
+            host     : 'awsreinventteam46-cluster-1.cluster-c8x1imogzrzr.us-west-2.rds.amazonaws.com',
+            user     : 'aws2016',
+            password : 'aws201646',
+            port     : '3306',
+            database: 'Aws2016Team46DB'
+        });    
+    
+        console.log('Connecting to mysql...');
+        conn.connect(() => getZipcodeFromLocation(zipcode, callback));
+        console.log('Connected');
+    } else {
+        getZipcodeFromLocation(zipcode, callback);
+    }
+    
+    
     
 }
 
 var returnTestData = function(callback) {
     var res = {
         scores: [
-            {
-                zip_code: '22222',
-                score: '35'
-                
-            },
-            {
-                zip_code: '11111',
-                score: '23'
-                
-            }
-        ]
-    }
+           { 'zip_code': '94040', 'score': 20, 'rank': 1 },
+           { 'zip_code': '94050', 'score': 10, 'rank': 2 },
+           { 'zip_code': '94060', 'score': 5,  'rank': 3 },
+         ]
+    };
     
   callback(null, res);  
 };
@@ -71,29 +125,36 @@ var returnTestData = function(callback) {
  */
 exports.handler = (event, context, callback) => {
     console.log('Received event:', JSON.stringify(event, null, 2));
-
-    const done = (err, res) => callback(null, {
-        statusCode: err ? '400' : '200',
-        body: err ? err.message : JSON.stringify(res),
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    });
     
-    if (event.test) {
+    var done = (err, res) => {
+        console.log('SENDING RESPONSE.', res);
+        callback(null, res);
+    };
+    
+    context.callbackWaitsForEmptyEventLoop = false;
+    var queryParams = event.params.querystring;
+    
+    if (queryParams.Test) {
         console.log("Returning test data.")
-        returnTestData(callback);
+        returnTestData(done);
         return;
     }
     
-    query(callback);
+    if(queryParams.zipcode) {
+        exports.connect(() => {
+            exports.getCoordinatesForZip(queryParams.zipcode, (err, res) => {
+                if (err) {
+                    callback(err);
+                    return;
+                }
+                
+                var lat = res.Coordinate.x;
+                var long = res.Coordinate.y;
+                exports.getZipcodeFromLocation({lat: lat, long: long}, callback);
+            });
+        });
+        return;
+    }
     
-    
-    /*switch (event.httpMethod) {
-        case 'GET':
-            dynamo.scan({ TableName: event.queryStringParameters.TableName }, done);
-            break;
-        default:
-            done(new Error(`Unsupported method "${event.httpMethod}"`));
-    }*/
+    callback('missing required parameter: zipcode');
 };

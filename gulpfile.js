@@ -28,5 +28,5 @@ gulp.task('clean', function() {
 
 gulp.task('deploy', ['package'], function() {
     return gulp.src('dist/archive.zip')
-        .pipe(lambda("leaderboard", lambdaOpts));
+        .pipe(lambda("leader", lambdaOpts));
 });
