@@ -21,7 +21,9 @@ function test() {
 };
 
 
-i.handler({params: {querystring: {zipcode: '27502'}}}, {}, done);
+//i.handler({params: {querystring: {zipcode: '94040'}}}, {}, done);
+
+i.handler({params: {querystring: {Lat: '-78.834012', Long: '35.748012', Zoom: '15'}}}, {}, done);
 
 /*i.connect(() => {
     i.getZips(['27502', '46038'], done);        
