@@ -188,6 +188,10 @@ exports.handler = (event, context, callback) => {
                                 'score': z.Score};
                         });
                         
+                        for (let j = 0; j < scores.length; j++) {
+                            scores[j].rank = j + 1;
+                        }
+                        
                         callback(null, {'scores': scores});
                     });
                 });
