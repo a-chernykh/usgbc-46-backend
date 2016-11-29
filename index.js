@@ -1,6 +1,7 @@
 'use strict';
 
 var mysql = require('mysql');
+var _ = require('lodash');
 
 console.log('Loading function');
 
@@ -30,7 +31,7 @@ exports.getZipcodeFromLocation = function(coord, callback) {
     set @rlat1 = @lat-(@dist/69);
     set @rlat2 = @lat+(@dist/69);*/
     
-    var query = 'select ZipCode from ZipCodes where st_within(Coordinate, envelope(linestring(point(?, ?), point(?, ?)))) order by st_distance(point(?, ?), Coordinate) limit 10'
+    var query = 'select ZipCode, Coordinate from ZipCodes where st_within(Coordinate, envelope(linestring(point(?, ?), point(?, ?)))) order by st_distance(point(?, ?), Coordinate) limit 10'
     conn.query(query, 
         [rlon1, rlat1, rlon2, rlat2, long, lat],
          function(err, rows, fields) {
@@ -175,6 +176,14 @@ exports.handler = (event, context, callback) => {
                         return;
                     }
                     
+                    var getCoordinates = function(zip) {
+                        var zipObj = _.find(res, (z) => z.ZipCode == zip);
+                        return {
+                                'lat': zipObj.Coordinate.y,
+                                'lon': zipObj.Coordinate.x
+                            }
+                    };
+                    
                     const zips = res.map((z) => z.ZipCode);
                     exports.getZips(zips, (err, res) => {
                         if (err) {
@@ -182,10 +191,12 @@ exports.handler = (event, context, callback) => {
                             return;
                         }
                         
+                    
                         var scores = res.map((z) => {
                             return {
                                 'zip_code': z.Zip,
-                                'score': z.Score};
+                                'score': z.Score,
+                                'coordinates': getCoordinates(z.Zip)};
                         });
                         
                         for (let j = 0; j < scores.length; j++) {
